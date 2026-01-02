@@ -2,12 +2,45 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <title>Hello World!</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OSV Scanner - Folder Upload</title>
   </head>
   <body>
-    <h1>💖 Hello World!</h1>
-    <p>Welcome to your Electron application.</p>
+    <div class="container">
+      <h1>📁 Folder Upload</h1>
+      <p class="subtitle">Select a folder from your computer to scan</p>
+      
+      <div class="upload-area" id="uploadArea">
+        <div class="upload-content">
+          <svg class="upload-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          <h2>Click to select a folder</h2>
+          <p>or drag and drop a folder here</p>
+        </div>
+      </div>
+
+      <div class="selected-folder" id="selectedFolder" style="display: none;">
+        <div class="folder-info">
+          <svg class="folder-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <div class="folder-details">
+            <p class="folder-label">Selected Folder:</p>
+            <p class="folder-path" id="folderPath"></p>
+          </div>
+        </div>
+        <button class="btn-change" id="changeFolderBtn">Change Folder</button>
+      </div>
+
+      <div class="actions">
+        <button class="btn-primary" id="scanBtn" disabled>Scan Folder</button>
+      </div>
+
+      <div class="scan-results" id="scanResults" style="display: none;"></div>
+    </div>
     <script type="module" src="/src/renderer.ts"></script>
   </body>
 </html>

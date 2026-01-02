@@ -1,10 +1,66 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain } from 'electron';
 import path from 'node:path';
+import { spawn } from 'node:child_process';
 import started from 'electron-squirrel-startup';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
   app.quit();
+}
+
+// Register IPC handlers before creating windows
+function registerIpcHandlers() {
+  // Handle folder selection dialog
+  ipcMain.handle('dialog:selectFolder', async () => {
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+      properties: ['openDirectory'],
+    });
+    if (!canceled && filePaths.length > 0) {
+      return filePaths[0];
+    }
+    return null;
+  });
+
+  // Handle scanning folder with osv-scanner
+  ipcMain.handle('scan:folder', async (_, folderPath: string) => {
+    return new Promise((resolve, reject) => {
+      const command = 'osv-scanner';
+      const args = ['scan', 'source', '-r', '.'];
+      
+      // Spawn the process in the selected folder directory
+      const childProcess = spawn(command, args, {
+        cwd: folderPath,
+        shell: true, // Use shell to find osv-scanner in PATH
+      });
+
+      let stdout = '';
+      let stderr = '';
+
+      childProcess.stdout.on('data', (data) => {
+        stdout += data.toString();
+      });
+
+      childProcess.stderr.on('data', (data) => {
+        stderr += data.toString();
+      });
+
+      childProcess.on('close', (code) => {
+        resolve({
+          success: code === 0,
+          exitCode: code,
+          stdout,
+          stderr,
+        });
+      });
+
+      childProcess.on('error', (error) => {
+        reject({
+          success: false,
+          error: error.message,
+        });
+      });
+    });
+  });
 }
 
 const createWindow = () => {
@@ -29,6 +85,9 @@ const createWindow = () => {
   // Open the DevTools.
   mainWindow.webContents.openDevTools();
 };
+
+// Register IPC handlers
+registerIpcHandlers();
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
