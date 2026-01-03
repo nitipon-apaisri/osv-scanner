@@ -24,13 +24,26 @@ function registerIpcHandlers() {
   // Handle scanning folder with osv-scanner
   ipcMain.handle('scan:folder', async (_, folderPath: string) => {
     return new Promise((resolve, reject) => {
-      const command = 'osv-scanner';
-      const args = ['scan', 'source', '-r', '.'];
+      // Use bundled osv-scanner if available, otherwise use system one
+      const isPackaged = app.isPackaged;
+      let command: string;
+      let args: string[];
+
+      if (isPackaged) {
+        // Use bundled binary
+        const resourcesPath = process.resourcesPath;
+        command = path.join(resourcesPath, 'osv-scanner');
+        args = ['scan', 'source', '-r', '.'];
+      } else {
+        // Development mode - use system osv-scanner
+        command = 'osv-scanner';
+        args = ['scan', 'source', '-r', '.'];
+      }
       
       // Spawn the process in the selected folder directory
       const childProcess = spawn(command, args, {
         cwd: folderPath,
-        shell: true, // Use shell to find osv-scanner in PATH
+        shell: !isPackaged, // Only use shell in dev mode
       });
 
       let stdout = '';
@@ -66,8 +79,9 @@ function registerIpcHandlers() {
 const createWindow = () => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 1240,
+    height: 800,
+    title: 'OSV Scanner',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
